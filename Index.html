@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerador de Senhas Seguras</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 2.5rem;
+      background: linear-gradient(to right, #00c6ff, #0072ff);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .container {
+      background: #1e1e2f;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    label {
+      display: block;
+      margin: 0.5rem 0;
+    }
+
+    input[type="checkbox"], input[type="range"] {
+      margin-right: 0.5rem;
+    }
+
+    .options {
+      margin-top: 1rem;
+    }
+
+    .password {
+      font-size: 1.5rem;
+      background: #333;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      margin-bottom: 1rem;
+      word-break: break-all;
+    }
+
+    .strength-bar {
+      height: 12px;
+      background: gray;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .strength-fill {
+      height: 100%;
+      transition: width 0.4s;
+    }
+
+    .estimate {
+      margin-top: 1rem;
+      font-style: italic;
+      font-size: 0.9rem;
+    }
+
+    button {
+      padding: 0.7rem 1.2rem;
+      border: none;
+      background: #00c6ff;
+      color: white;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 1rem;
+    }
+
+    button:hover {
+      background: #0072ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gerador de Senha Estilosa</h1>
+  <div class="container">
+    <div class="password" id="senha">Sua senha aparecerá aqui</div>
+
+    <label>Tamanho: <span id="range-value">12</span></label>
+    <input type="range" min="6" max="32" value="12" id="tamanhoSenha">
+
+    <div class="options">
+      <label><input type="checkbox" id="maiusculas" checked> Incluir Letras Maiúsculas</label>
+      <label><input type="checkbox" id="numeros" checked> Incluir Números</label>
+      <label><input type="checkbox" id="simbolos" checked> Incluir Símbolos</label>
+    </div>
+
+    <button onclick="gerarSenha()">Gerar Senha</button>
+
+    <div class="strength-bar">
+      <div class="strength-fill" id="barraForca" style="width: 0%; background: red;"></div>
+    </div>
+    <div class="estimate" id="estimativa">Estimativa: --</div>
+  </div>
+
+  <script>
+    const senhaEl = document.getElementById("senha");
+    const rangeEl = document.getElementById("tamanhoSenha");
+    const rangeVal = document.getElementById("range-value");
+    const barraForca = document.getElementById("barraForca");
+    const estimativaEl = document.getElementById("estimativa");
+
+    const letrasMin = "abcdefghijklmnopqrstuvwxyz";
+    const letrasMai = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numeros = "0123456789";
+    const simbolos = "!@#$%^&*()_+[]{}<>?|";
+
+    rangeEl.addEventListener("input", () => {
+      rangeVal.textContent = rangeEl.value;
+    });
+
+    function gerarSenha() {
+      let chars = letrasMin;
+      if (document.getElementById("maiusculas").checked) chars += letrasMai;
+      if (document.getElementById("numeros").checked) chars += numeros;
+      if (document.getElementById("simbolos").checked) chars += simbolos;
+
+      const tamanho = parseInt(rangeEl.value);
+      let senha = "";
+      for (let i = 0; i < tamanho; i++) {
+        senha += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+
+      senhaEl.textContent = senha;
+      verificarForca(senha);
+    }
+
+    function verificarForca(senha) {
+      let forca = 0;
+      if (senha.length >= 8) forca += 1;
+      if (/[A-Z]/.test(senha)) forca += 1;
+      if (/[0-9]/.test(senha)) forca += 1;
+      if (/[^a-zA-Z0-9]/.test(senha)) forca += 1;
+
+      let cor = "red";
+      let largura = "25%";
+      let textoEstimativa = "Muito fraca";
+
+      if (forca === 2) {
+        cor = "orange";
+        largura = "50%";
+        textoEstimativa = "Fraca";
+      } else if (forca === 3) {
+        cor = "yellow";
+        largura = "75%";
+        textoEstimativa = "Boa";
+      } else if (forca === 4) {
+        cor = "limegreen";
+        largura = "100%";
+        textoEstimativa = "Forte";
+      }
+
+      barraForca.style.width = largura;
+      barraForca.style.backgroundColor = cor;
+
+      const possibilidades = Math.pow(2, senha.length * (Math.log2(charsUsados(senha))));
+      const segundos = possibilidades / 1000000000; // 1 bilhão tentativas/segundo
+      const dias = Math.floor(segundos / 86400);
+
+      estimativaEl.textContent = `Força: ${textoEstimativa} | Levaria aproximadamente ${dias} dias para descobrir`;
+    }
+
+    function charsUsados(senha) {
+      let pool = 26; // minúsculas
+      if (/[A-Z]/.test(senha)) pool += 26;
+      if (/[0-9]/.test(senha)) pool += 10;
+      if (/[^a-zA-Z0-9]/.test(senha)) pool += 32;
+      return pool;
+    }
+
+    // Gerar uma senha logo ao carregar
+    gerarSenha();
+  </script>
+</body>
+</html>
